@@ -23,5 +23,9 @@ export const USER_VALID_MESSAGES = {
   ACCESS_TOKEN_REQUIRED: 'access token not be null! REQUIRED',
   REFRESH_TOKEN_REQUIRED: 'refresh token not be null! REQUIRED',
   REFRESH_TOKEN_INVALID: 'refresh token malformed, not valid',
-  REFRESH_TOKEN_USED_OR_NOTEXIST: 'refresh token be used, or not exist'
+  REFRESH_TOKEN_USED_OR_NOTEXIST: 'refresh token be used, or not exist',
+  FORGOT_PASSWORD_TOKEN_REQUIRED: 'forgot password token is required',
+  INVALI_FORGOT_PASSWORD_TOKEN: 'forgot password token invalid',
+  VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS: 'verify forgot password done',
+  RESET_PASSWORD_DONE: 'Reset password successfully'
 } as const

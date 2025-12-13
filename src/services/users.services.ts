@@ -70,6 +70,11 @@ class UserService {
     })
   }
 
+  /**
+   * Hàm Đăng ký tài khoản
+   * @param payload 
+   * @returns 
+   */
   async register(payload: RegisterReqBody) {
     const user_id = new ObjectId()
     const email_verify_token = await this.signEmailVerifyToken(user_id.toString())
@@ -91,7 +96,11 @@ class UserService {
     )
     return { access_token, refresh_token }
   }
-
+  /**
+   * Hàm đăng nhập tài khoản
+   * @param payload 
+   * @returns 
+   */
   async login(user_id: string) {
     const [access_token, refresh_token] = await this.signAccessAndRefreshToken(user_id)
     await databaseService.refreshTokens.insertOne(
@@ -103,6 +112,11 @@ class UserService {
     return { access_token, refresh_token }
   }
 
+  /**
+   * Đăng xuất thì xóa refresh_token trong db đi
+   * @param refresh_token 
+   * @returns 
+   */
   async logout(refresh_token: string) {
     await databaseService.refreshTokens.deleteOne({ token: refresh_token })
     return {
@@ -136,6 +150,11 @@ class UserService {
       refresh_token
     }
   }
+  /**
+   * Hàm gửi 
+   * @param user_id 
+   * @returns 
+   */
   async resendVerifyEmail(user_id: string) {
     const email_verify_token = await this.signEmailVerifyToken(user_id)
 
@@ -154,6 +173,11 @@ class UserService {
       message: USER_VALID_MESSAGES.RESEND_VERIFY_EMAIL_DONE
     }
   }
+  /**
+   * Hàm xử lý quên mật khẩu
+   * @param user_id 
+   * @returns 
+   */
   async forgotPassword(user_id: string) {
     const forgot_password = this.signForgotPasswordToken(user_id)
     await databaseService.users.updateOne(
@@ -169,6 +193,24 @@ class UserService {
     )
     return {
       message: USER_VALID_MESSAGES.PASSWORD_RESET_FORGOT_OK
+    }
+  }
+
+  async resetPassword(user_id: string, password: string) {
+    databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          forgot_password_token: '',
+          password: hashPassword(password)
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+    return {
+      message: USER_VALID_MESSAGES.RESET_PASSWORD_DONE
     }
   }
 }

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { emailVerifyController, forgotPasswordController, loginController, logoutController, registerController, resendEmailVerifyController, resetPasswordController, verifyForgotPasswordController } from "~/controllers/users.controllers";
-import { accessTokenValidator, emailVerifyTokenValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, verifyForgotPasswordTokenValidator } from "~/middlewares/users.middlewares";
+import { emailVerifyController, forgotPasswordController, getMeController, loginController, logoutController, registerController, resendEmailVerifyController, resetPasswordController, updateMeController, verifyForgotPasswordController } from "~/controllers/users.controllers";
+import { accessTokenValidator, emailVerifyTokenValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, updateMeValidator, verifiedUserValidator, verifyForgotPasswordTokenValidator } from "~/middlewares/users.middlewares";
 import { wrapRequestHandler } from "~/utils/handlers";
 const userRouter = Router()
 
@@ -19,5 +19,9 @@ userRouter.post("/forgot-password", forgotPasswordValidator, wrapRequestHandler(
 userRouter.post("/verify-forgot-password", verifyForgotPasswordTokenValidator, wrapRequestHandler(verifyForgotPasswordController))
 
 userRouter.post("/reset-password", resetPasswordValidator, wrapRequestHandler(resetPasswordController))
+// get profile user
+userRouter.post("/me", accessTokenValidator, wrapRequestHandler(getMeController))
+// run accessToken verify first to get decode
+userRouter.patch("/me", accessTokenValidator, updateMeValidator, wrapRequestHandler(updateMeController))
 
 export default userRouter

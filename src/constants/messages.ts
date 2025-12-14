@@ -20,6 +20,8 @@ export const USER_VALID_MESSAGES = {
 
   DATE_VALID_ISO8601: 'Invalid Date Type',
   USER_NOT_FOUND: 'user not found! Wrong email or password',
+  USER_NOT_VERIFIED: 'user still not verified',
+  USER_UPDATE_DONE: 'user info was updated successfully',
   ACCESS_TOKEN_REQUIRED: 'access token not be null! REQUIRED',
   REFRESH_TOKEN_REQUIRED: 'refresh token not be null! REQUIRED',
   REFRESH_TOKEN_INVALID: 'refresh token malformed, not valid',
@@ -27,5 +29,15 @@ export const USER_VALID_MESSAGES = {
   FORGOT_PASSWORD_TOKEN_REQUIRED: 'forgot password token is required',
   INVALI_FORGOT_PASSWORD_TOKEN: 'forgot password token invalid',
   VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS: 'verify forgot password done',
-  RESET_PASSWORD_DONE: 'Reset password successfully'
+  RESET_PASSWORD_DONE: 'Reset password successfully',
+
+  BIO_MUST_BE_STRING: 'bio must be string',
+  BIO_TOO_SHORT: 'bio is too short, not valid'
+} as const
+
+export const COMMON_MESSAGES = {
+  FIELD_MUST_BE_STRING: 'This field must be string',
+  FIELD_TOO_SHORT: 'This field should not be short',
+  IMAGE_URL_BE_STRING: 'url of image must be string',
+  IMAGE_URL_WRONG_LENGTH: 'the length of url not be fit'
 } as const

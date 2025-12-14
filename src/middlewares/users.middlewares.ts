@@ -5,9 +5,11 @@ import { checkSchema, ParamSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { capitalize } from 'lodash'
 import { ObjectId } from 'mongodb'
+import { UserVerifyStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/httpStatus'
-import { USER_VALID_MESSAGES } from '~/constants/messages'
+import { COMMON_MESSAGES, USER_VALID_MESSAGES } from '~/constants/messages'
 import { ErrorStatus } from '~/models/errors'
+import { TokenPayload } from '~/models/requests/user.requests'
 import databaseService from '~/services/database.services'
 import userService from '~/services/users.services'
 import { hashPassword } from '~/utils/crypto'
@@ -102,7 +104,45 @@ const forgotPasswordTokenSchema: ParamSchema = {
     }
   }
 }
-
+const nameSchema: ParamSchema = {
+  notEmpty: {
+    errorMessage: USER_VALID_MESSAGES.NAME_REQUIRED
+  },
+  isString: {
+    errorMessage: USER_VALID_MESSAGES.NAME_IS_STRING
+  },
+  isLength: {
+    errorMessage: USER_VALID_MESSAGES.NAME_LENGTH,
+    options: {
+      min: 1,
+      max: 100
+    }
+  },
+  trim: true
+}
+const dateOfBirthSchema: ParamSchema = {
+  isISO8601: {
+    options: {
+      strict: true,
+      strictSeparator: true
+    },
+    errorMessage: USER_VALID_MESSAGES.DATE_VALID_ISO8601
+  }
+}
+const imageSchema: ParamSchema = {
+  optional: true,
+  isString: {
+    errorMessage: COMMON_MESSAGES.IMAGE_URL_BE_STRING
+  },
+  trim: true,
+  isLength: {
+    errorMessage: COMMON_MESSAGES.IMAGE_URL_WRONG_LENGTH,
+    options: {
+      min: 50,
+      max: 400
+    }
+  }
+}
 /**======================= Validate =========================== */
 
 export const loginValidator = validate(checkSchema({
@@ -151,22 +191,7 @@ export const loginValidator = validate(checkSchema({
 }, ['body']))
 
 export const registerValidator = validate(checkSchema({
-  name: {
-    notEmpty: {
-      errorMessage: USER_VALID_MESSAGES.NAME_REQUIRED
-    },
-    isString: {
-      errorMessage: USER_VALID_MESSAGES.NAME_IS_STRING
-    },
-    isLength: {
-      errorMessage: USER_VALID_MESSAGES.NAME_LENGTH,
-      options: {
-        min: 1,
-        max: 100
-      }
-    },
-    trim: true
-  },
+  name: nameSchema,
   email: {
     notEmpty: {
       errorMessage: USER_VALID_MESSAGES.EMAIL_REQUIRED
@@ -187,15 +212,7 @@ export const registerValidator = validate(checkSchema({
   },
   password: passwordSchema,
   confirm_password: confirmPasswordSchema,
-  date_of_birth: {
-    isISO8601: {
-      options: {
-        strict: true,
-        strictSeparator: true
-      },
-      errorMessage: USER_VALID_MESSAGES.DATE_VALID_ISO8601
-    }
-  }
+  date_of_birth: dateOfBirthSchema
 }, ['body']))
 
 // access token
@@ -341,5 +358,90 @@ export const resetPasswordValidator = validate(
     password: passwordSchema,
     confirm_password: confirmPasswordSchema,
     forgot_password_token: forgotPasswordTokenSchema
+  }, ['body'])
+)
+export const verifiedUserValidator = (req: Request, res: Response, next: NextFunction) => {
+  const { verify } = req.decoded_authorization as TokenPayload
+  if (verify !== UserVerifyStatus.Verified) {
+    return next(
+      new ErrorStatus({
+        message: USER_VALID_MESSAGES.USER_NOT_VERIFIED,
+        status: HTTP_STATUS.FORBIDDEN
+      })
+    )
+  }
+  next()
+}
+
+export const updateMeValidator = validate(
+  checkSchema({
+    name: {
+      ...nameSchema,
+      optional: true,
+      notEmpty: undefined
+    },
+    date_of_birth: {
+      ...dateOfBirthSchema,
+      optional: true
+    },
+    bio: {
+      optional: true,
+      isString: {
+        errorMessage: USER_VALID_MESSAGES.BIO_MUST_BE_STRING
+      },
+      trim: true,
+      isLength: {
+        errorMessage: USER_VALID_MESSAGES.BIO_TOO_SHORT,
+        options: {
+          min: 2,
+          max: 300
+        }
+      }
+    },
+    location: {
+      optional: true,
+      isString: {
+        errorMessage: COMMON_MESSAGES.FIELD_MUST_BE_STRING
+      },
+      trim: true,
+      isLength: {
+        errorMessage: COMMON_MESSAGES.FIELD_TOO_SHORT,
+        options: {
+          min: 2,
+          max: 100
+        }
+      }
+    },
+    website: {
+      optional: true,
+      isString: {
+        errorMessage: COMMON_MESSAGES.FIELD_MUST_BE_STRING
+      },
+      trim: true,
+      isLength: {
+        errorMessage: COMMON_MESSAGES.FIELD_TOO_SHORT,
+        options: {
+          min: 2,
+          max: 200
+        }
+      }
+    },
+    username: {
+      optional: true,
+      isString: {
+        errorMessage: COMMON_MESSAGES.FIELD_MUST_BE_STRING
+      },
+      trim: true,
+      isLength: {
+        errorMessage: COMMON_MESSAGES.FIELD_TOO_SHORT,
+        options: {
+          min: 2,
+          max: 50
+        }
+      }
+    },
+    avatar: imageSchema,
+    cover_photo: imageSchema
+
   }, ['body'])
 )

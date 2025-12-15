@@ -32,7 +32,20 @@ export const USER_VALID_MESSAGES = {
   RESET_PASSWORD_DONE: 'Reset password successfully',
 
   BIO_MUST_BE_STRING: 'bio must be string',
-  BIO_TOO_SHORT: 'bio is too short, not valid'
+  BIO_TOO_SHORT: 'bio is too short, not valid',
+  GET_PROFILE_SUCCESS: 'Get profile success',
+  FOLLOW_SUCCESS: 'Follow success',
+  INVALID_USER_ID: 'Invalid user id',
+  FOLLOWED: 'Followed',
+  ALREADY_UNFOLLOWED: 'Already unfollowed',
+  UNFOLLOW_SUCCESS: 'Unfollow success',
+  USERNAME_EXISTED: 'Username existed',
+  OLD_PASSWORD_NOT_MATCH: 'Old password not match',
+  CHANGE_PASSWORD_SUCCESS: 'Change password success',
+  GMAIL_NOT_VERIFIED: 'Gmail not verified',
+  UPLOAD_SUCCESS: 'Upload success',
+  REFRESH_TOKEN_SUCCESS: 'Refresh token success',
+  GET_VIDEO_STATUS_SUCCESS: 'Get video status success'
 } as const
 
 export const COMMON_MESSAGES = {

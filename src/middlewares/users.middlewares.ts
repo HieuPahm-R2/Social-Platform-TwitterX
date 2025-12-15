@@ -143,6 +143,28 @@ const imageSchema: ParamSchema = {
     }
   }
 }
+const userIdSchema: ParamSchema = {
+  custom: {
+    options: async (value: string, { req }) => {
+      if (!ObjectId.isValid(value)) {
+        throw new ErrorStatus({
+          message: USER_VALID_MESSAGES.INVALID_USER_ID,
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+      // kiểm tra thằng mà mình muốn follow có tồn tại acc không?
+      const followed_user = await databaseService.users.findOne({
+        _id: new ObjectId(value)
+      })
+      if (followed_user === null) {
+        throw new ErrorStatus({
+          message: USER_VALID_MESSAGES.USER_NOT_FOUND,
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+    }
+  }
+}
 /**======================= Validate =========================== */
 
 export const loginValidator = validate(checkSchema({
@@ -444,4 +466,13 @@ export const updateMeValidator = validate(
     cover_photo: imageSchema
 
   }, ['body'])
+)
+
+export const followValidator = validate(
+  checkSchema(
+    {
+      followed_user_id: userIdSchema
+    },
+    ['body']
+  )
 )

@@ -22,6 +22,7 @@ export const USER_VALID_MESSAGES = {
   USER_NOT_FOUND: 'user not found! Wrong email or password',
   USER_NOT_VERIFIED: 'user still not verified',
   USER_UPDATE_DONE: 'user info was updated successfully',
+  USERNAME_INVALID: 'Username must be 4-15 characters long and contain only letters, numbers, underscores, not only numbers',
   ACCESS_TOKEN_REQUIRED: 'access token not be null! REQUIRED',
   REFRESH_TOKEN_REQUIRED: 'refresh token not be null! REQUIRED',
   REFRESH_TOKEN_INVALID: 'refresh token malformed, not valid',

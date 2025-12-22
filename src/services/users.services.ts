@@ -313,6 +313,43 @@ class UserService {
       message: USER_VALID_MESSAGES.FOLLOWED
     }
   }
+  async unfollow(user_id: string, followed_user_id: string) {
+    const follower = await databaseService.followers.findOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+    // Không tìm thấy document follower
+    // chưa follow người này
+    if (follower === null) {
+      return {
+        message: USER_VALID_MESSAGES.ALREADY_UNFOLLOWED
+      }
+    }
+    // đã follow người này rồi, thì tiến hành xóa document này
+    await databaseService.followers.deleteOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+    return {
+      message: USER_VALID_MESSAGES.UNFOLLOW_SUCCESS
+    }
+  }
+  async changePassword(user_id: string, new_password: string) {
+    await databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          password: hashPassword(new_password)
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+    return {
+      message: USER_VALID_MESSAGES.CHANGE_PASSWORD_SUCCESS
+    }
+  }
 }
 
 

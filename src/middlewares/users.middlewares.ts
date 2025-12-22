@@ -1,13 +1,12 @@
-import { error } from 'console'
-import { verify } from 'crypto'
 import { Request, Response, NextFunction } from 'express'
-import { checkSchema, ParamSchema } from 'express-validator'
+import { check, checkSchema, ParamSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { capitalize } from 'lodash'
 import { ObjectId } from 'mongodb'
 import { UserVerifyStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { COMMON_MESSAGES, USER_VALID_MESSAGES } from '~/constants/messages'
+import { REGEX_USERNAME } from '~/constants/regex'
 import { ErrorStatus } from '~/models/errors'
 import { TokenPayload } from '~/models/requests/user.requests'
 import databaseService from '~/services/database.services'
@@ -454,11 +453,15 @@ export const updateMeValidator = validate(
         errorMessage: COMMON_MESSAGES.FIELD_MUST_BE_STRING
       },
       trim: true,
-      isLength: {
-        errorMessage: COMMON_MESSAGES.FIELD_TOO_SHORT,
-        options: {
-          min: 2,
-          max: 50
+      custom: {
+        options: async (value: string) => {
+          if (!REGEX_USERNAME.test(value)) {
+            throw Error(USER_VALID_MESSAGES.USERNAME_INVALID)
+          }
+          const user = await databaseService.users.findOne({ username: value })
+          if (user) {
+            throw Error(USER_VALID_MESSAGES.USERNAME_EXISTED)
+          }
         }
       }
     },
@@ -475,4 +478,43 @@ export const followValidator = validate(
     },
     ['body']
   )
+)
+
+export const unfollowValidator = validate(
+  checkSchema(
+    {
+      user_id: userIdSchema
+    },
+    ['params']
+  )
+)
+
+export const changePasswordValidator = validate(
+  checkSchema({
+    old_password: {
+      ...passwordSchema,
+      custom: {
+        options: async (value: string, { req }) => {
+          const { user_id } = (req as Request).decoded_authorization as TokenPayload
+          const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+          if (!user) {
+            throw new ErrorStatus({
+              message: USER_VALID_MESSAGES.USER_NOT_FOUND,
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+          const { password } = user
+          const isMatching = hashPassword(value) === password
+          if (!isMatching) {
+            throw new ErrorStatus({
+              message: USER_VALID_MESSAGES.OLD_PASSWORD_NOT_MATCH,
+              status: HTTP_STATUS.UNAUTHORIZED
+            })
+          }
+        }
+      }
+    },
+    new_password: passwordSchema,
+    confirm_new_password: confirmPasswordSchema
+  })
 )

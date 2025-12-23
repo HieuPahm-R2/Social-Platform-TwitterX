@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changePasswordController, emailVerifyController, followController, forgotPasswordController, getMeController, getProfileController, loginController, logoutController, registerController, resendEmailVerifyController, resetPasswordController, unfollowController, updateMeController, verifyForgotPasswordController } from "~/controllers/users.controllers";
+import { changePasswordController, emailVerifyController, followController, forgotPasswordController, getMeController, getProfileController, loginController, logoutController, oauthController, registerController, resendEmailVerifyController, resetPasswordController, unfollowController, updateMeController, verifyForgotPasswordController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
 import { accessTokenValidator, changePasswordValidator, emailVerifyTokenValidator, followValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, unfollowValidator, updateMeValidator, verifiedUserValidator, verifyForgotPasswordTokenValidator } from "~/middlewares/users.middlewares";
 import { UpdateMeBody } from "~/models/requests/user.requests";
@@ -7,6 +7,12 @@ import { wrapRequestHandler } from "~/utils/handlers";
 const userRouter = Router()
 
 userRouter.post('/login', loginValidator, wrapRequestHandler(loginController))
+
+/**
+ * Description. OAuth with Google
+ * Query: { code: string }
+ */
+userRouter.get('/oauth/google', wrapRequestHandler(oauthController))
 
 userRouter.post('/register', registerValidator, wrapRequestHandler(registerController))
 
@@ -39,15 +45,11 @@ userRouter.patch("/me",
   wrapRequestHandler(updateMeController))
 /**
  * Description: Get user profile
- * Path: /:username
- * Method: GET
  */
 userRouter.get('/:username', wrapRequestHandler(getProfileController))
 
 /**
  * Description: Follow other user account
- * Path: /follow
- * Method: POST
  * Header: { Authorization: Bearer <access_token> }
  * Body: { followed_user_id: string }
  */
@@ -60,8 +62,6 @@ userRouter.post(
 )
 /**
  * Description: unfollow someone
- * Path: /follow/user_id
- * Method: DELETE
  * Header: { Authorization: Bearer <access_token> }
  */
 userRouter.delete(
@@ -73,8 +73,6 @@ userRouter.delete(
 )
 /**
  * Description: Change password
- * Path: /change-password
- * Method: PUT
  * Header: { Authorization: Bearer <access_token> }
  * Body: { old_password: string, password: string, confirm_password: string }
  */

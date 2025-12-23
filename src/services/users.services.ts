@@ -2,7 +2,7 @@ import User from "~/models/schemas/User.schema"
 import databaseService from "./database.services"
 import { RegisterReqBody, UpdateMeBody } from "~/models/requests/user.requests"
 import { hashPassword } from "~/utils/crypto"
-import { signToken } from "~/utils/jwt"
+import { signToken, verifyToken } from "~/utils/jwt"
 import { TokenType, UserVerifyStatus } from "~/constants/enums"
 import RefreshToken from "~/models/schemas/RefreshToken.schema"
 import { ObjectId } from "mongodb"
@@ -11,6 +11,7 @@ import { USER_VALID_MESSAGES } from "~/constants/messages"
 import { ErrorStatus } from "~/models/errors"
 import HTTP_STATUS from "~/constants/httpStatus"
 import Follower from "~/models/schemas/Follower.schema"
+import axios from "axios"
 
 config()
 
@@ -43,6 +44,13 @@ class UserService {
     })
   }
 
+  private decodeRefreshToken(refresh_token: string) {
+    return verifyToken({
+      token: refresh_token,
+      secretOrPublicKey: process.env.JWT_SECRETKEY_REFRESH_TOKEN as string
+    })
+  }
+
   private signForgotPasswordToken({ user_id, verify }: { user_id: string, verify: UserVerifyStatus }) {
     return signToken({
       payload: {
@@ -63,6 +71,7 @@ class UserService {
       this.signRefreshToken({ user_id, verify })
     ])
   }
+
   private signEmailVerifyToken({ user_id, verify }: { user_id: string, verify: UserVerifyStatus }) {
     return signToken({
       payload: {
@@ -103,10 +112,12 @@ class UserService {
       user_id: user_id.toString(),
       verify: UserVerifyStatus.Unverified
     })
+    const { iat, exp } = await this.decodeRefreshToken(refresh_token)
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({
         user_id: new ObjectId(user_id),
-        token: refresh_token
+        token: refresh_token,
+        iat, exp
       })
     )
     return { access_token, refresh_token }
@@ -121,13 +132,102 @@ class UserService {
       user_id,
       verify
     })
+    const { iat, exp } = await this.decodeRefreshToken(refresh_token)
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({
         user_id: new ObjectId(user_id),
-        token: refresh_token
+        token: refresh_token,
+        iat, exp
       })
     )
     return { access_token, refresh_token }
+  }
+  /**
+   * Google Login
+   */
+  private async getOauthToken(code: string) {
+    const body = {
+      code,
+      client_id: process.env.GOOGLE_CLIENT_ID as string,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET as string,
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI as string,
+      grant_type: 'authorization_code'
+    }
+    const { data } = await axios.post('https://oauth2.googleapis.com/token', body, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    })
+    return data as {
+      access_token: string,
+      id_token: string
+    }
+  }
+  private async getUserGGInfo(access_token: string, id_token: string) {
+    const { data } = await axios.get('https://www.googleapis.com/oauth2/v1/userinfo', {
+      params: {
+        access_token,
+        alt: 'json'
+      },
+      headers: {
+        Authorization: `Bearer ${id_token}`
+      }
+    })
+    return data as {
+      id: string
+      email: string
+      verified_email: string
+      name: string
+      given_name: string
+      family_name: string
+      picture: string
+      locale: string
+    }
+  }
+  async oauthLogin(code: string) {
+    const { id_token, access_token } = await this.getOauthToken(code)
+    const userInfo = await this.getUserGGInfo(access_token, id_token)
+    if (!userInfo.verified_email) {
+      throw new ErrorStatus({
+        message: USER_VALID_MESSAGES.GMAIL_NOT_VERIFIED,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+    // Kiểm tra xem email này đã có trong db chưa?
+    const user = await databaseService.users.findOne({ email: userInfo.email })
+    // Nếu tồn tại thì cho login
+    if (user) {
+      const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
+        user_id: user._id.toString(),
+        verify: user.verify
+      })
+      const { iat, exp } = await this.decodeRefreshToken(refresh_token)
+      await databaseService.refreshTokens.insertOne(new RefreshToken(
+        { user_id: user._id, token: refresh_token, iat, exp }
+      ))
+      return {
+        access_token,
+        refresh_token,
+        newUser: 0,
+        verify: user.verify
+      }
+    } else {
+      // random string password
+      const password = Math.random().toString(36).substring(2, 15)
+      // không thì đăng ký
+      const dataNew = await this.register({
+        email: userInfo.email,
+        name: userInfo.name,
+        date_of_birth: new Date().toISOString(),
+        password,
+        confirm_password: password
+      })
+      return {
+        ...dataNew,
+        newUser: 1,
+        verify: UserVerifyStatus.Unverified
+      }
+    }
   }
 
   /**
@@ -163,6 +263,10 @@ class UserService {
       )
     ])
     const [access_token, refresh_token] = token
+    const { iat, exp } = await this.decodeRefreshToken(refresh_token)
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token, iat, exp })
+    )
     return {
       access_token,
       refresh_token

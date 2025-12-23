@@ -8,7 +8,10 @@ import { ObjectId } from "mongodb";
 import HTTP_STATUS from "~/constants/httpStatus";
 import { USER_VALID_MESSAGES } from "~/constants/messages";
 import { UserVerifyStatus } from "~/constants/enums";
-import { result } from "lodash";
+import { config } from "dotenv";
+
+
+config()
 
 export const loginController = async (req: Request<ParamsDictionary, any, LoginReqBody>, res: Response) => {
   const user = req.user as User
@@ -18,8 +21,13 @@ export const loginController = async (req: Request<ParamsDictionary, any, LoginR
     message: 'Login successfully',
     result
   })
+}
 
-
+export const oauthController = async (req: Request, res: Response) => {
+  const { code } = req.query
+  const result = await userService.oauthLogin(code as string)
+  const redirectUrl = `${process.env.CLIENT_REDIRECT_CALLBACK as string}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&new_user=${result.newUser}&verify=${result.verify}`
+  return res.redirect(redirectUrl)
 }
 export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response, next: NextFunction) => {
   try {
@@ -33,6 +41,7 @@ export const registerController = async (req: Request<ParamsDictionary, any, Reg
     next(error)
   }
 }
+
 export const logoutController = async (req: Request<ParamsDictionary, any, LogoutReqBody>, res: Response) => {
   const { refresh_token } = req.body
   const result = await userService.logout(refresh_token)

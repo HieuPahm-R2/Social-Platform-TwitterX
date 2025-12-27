@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import databaseService from "~/services/database.services";
 import { NextFunction, ParamsDictionary } from 'express-serve-static-core'
 import userService from "~/services/users.services";
-import { ChangePasswordReqBody, FollowReqBody, ForgotPasswordReqBody, GetProfileReqParams, LoginReqBody, LogoutReqBody, RegisterReqBody, ResetPasswordReqBody, TokenPayload, UnfollowReqParams, UpdateMeBody, VerifyEmailReqBody } from "~/models/requests/user.requests";
+import { ChangePasswordReqBody, FollowReqBody, ForgotPasswordReqBody, GetProfileReqParams, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordReqBody, TokenPayload, UnfollowReqParams, UpdateMeBody, VerifyEmailReqBody } from "~/models/requests/user.requests";
 import User from "~/models/schemas/User.schema";
 import { ObjectId } from "mongodb";
 import HTTP_STATUS from "~/constants/httpStatus";
@@ -46,6 +46,13 @@ export const logoutController = async (req: Request<ParamsDictionary, any, Logou
   const { refresh_token } = req.body
   const result = await userService.logout(refresh_token)
   return res.json(result)
+}
+
+export const refreshTokenController = async (
+  req: Request<ParamsDictionary, any, RefreshTokenReqBody>,
+  res: Response
+) => {
+
 }
 
 export const emailVerifyController = async (req: Request<ParamsDictionary, any, VerifyEmailReqBody>, res: Response, next: NextFunction) => {

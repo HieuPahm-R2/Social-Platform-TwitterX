@@ -18,6 +18,8 @@ userRouter.post('/register', registerValidator, wrapRequestHandler(registerContr
 
 userRouter.post("/logout", accessTokenValidator, refreshTokenValidator, wrapRequestHandler(logoutController))
 
+userRouter.post('/refresh-token', refreshTokenValidator, wrapRequestHandler(refreshTokenController))
+
 userRouter.post("/verify-email", emailVerifyTokenValidator, wrapRequestHandler(emailVerifyController))
 
 userRouter.post("/resend-verify-email", accessTokenValidator, wrapRequestHandler(resendEmailVerifyController))

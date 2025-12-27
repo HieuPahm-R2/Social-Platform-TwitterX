@@ -5,6 +5,7 @@ import { defaultErrorHandler } from './middlewares/errors.middlewares';
 import { initFolder } from './utils/file';
 import { config } from 'dotenv';
 import argv from 'minimist';
+import staticRouter from './routes/static.routes';
 
 config()
 const options = argv(process.argv.slice(2))
@@ -19,6 +20,7 @@ initFolder()
 app.use(express.json())
 app.use('/users', userRouter)
 app.use('/medias', userRouter)
+app.use('/static', staticRouter)
 app.use(defaultErrorHandler);
 
 

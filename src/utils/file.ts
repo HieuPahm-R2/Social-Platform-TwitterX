@@ -43,3 +43,10 @@ export const handleUploadImage = async (req: Request) => {
     })
   })
 }
+
+export const getOriginFileName = (fullName: string) => {
+  // change into array like: ["hieu", "jpg"]
+  const namearr = fullName.split('.')
+  namearr.pop()
+  return namearr.join("")
+}

@@ -4,6 +4,7 @@ import { config } from 'dotenv';
 import User from '~/models/schemas/User.schema';
 import RefreshToken from '~/models/schemas/RefreshToken.schema';
 import Follower from '~/models/schemas/Follower.schema';
+import VideoStatus from '~/models/schemas/VideoStatus';
 config()
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@twitterx.ooikyt7.mongodb.net/?retryWrites=true&w=majority&appName=TwitterX`;
 
@@ -34,6 +35,9 @@ class DatabaseService {
   }
   get followers(): Collection<Follower> {
     return this.db.collection(process.env.DB_FOLLOWERS_COLLECTION as string)
+  }
+  get videoStatus(): Collection<VideoStatus> {
+    return this.db.collection(process.env.DB_VIDEO_STATUS_COLLECTION as string)
   }
 }
 const databaseService = new DatabaseService()

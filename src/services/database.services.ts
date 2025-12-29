@@ -7,6 +7,7 @@ import Follower from '~/models/schemas/Follower.schema';
 import VideoStatus from '~/models/schemas/VideoStatus';
 import Tweet from '~/models/schemas/Tweet.schema';
 import Hashtag from '~/models/schemas/HashTag.schema';
+import Bookmark from '~/models/schemas/BookMark.schema';
 config()
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@twitterx.ooikyt7.mongodb.net/?retryWrites=true&w=majority&appName=TwitterX`;
 
@@ -87,6 +88,9 @@ class DatabaseService {
   }
   get hashtags(): Collection<Hashtag> {
     return this.db.collection(process.env.DB_HASHTAGS_COLLECTION as string)
+  }
+  get bookmarks(): Collection<Bookmark> {
+    return this.db.collection(process.env.DB_BOOKMARKS_COLLECTION as string)
   }
 }
 const databaseService = new DatabaseService()

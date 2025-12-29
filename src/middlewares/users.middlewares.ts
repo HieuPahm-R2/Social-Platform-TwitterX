@@ -381,6 +381,7 @@ export const resetPasswordValidator = validate(
     forgot_password_token: forgotPasswordTokenSchema
   }, ['body'])
 )
+
 export const verifiedUserValidator = (req: Request, res: Response, next: NextFunction) => {
   const { verify } = req.decoded_authorization as TokenPayload
   if (verify !== UserVerifyStatus.Verified) {
@@ -518,3 +519,12 @@ export const changePasswordValidator = validate(
     confirm_new_password: confirmPasswordSchema
   })
 )
+
+export const isUserLoggedInValidator = (middleware: (req: Request, res: Response, next: NextFunction) => void) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (req.headers.authorization) {
+      return middleware(req, res, next)
+    }
+    next()
+  }
+}

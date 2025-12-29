@@ -15,3 +15,12 @@ export interface TweetRequestBody {
 export interface TweetParam extends ParamsDictionary {
   tweet_id: string
 }
+
+export interface Pagination {
+  limit: string
+  page: string
+}
+
+export interface TweetQuery extends Pagination, Query {
+  tweet_type: string
+}

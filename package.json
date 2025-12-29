@@ -18,6 +18,7 @@
   "type": "commonjs",
   "devDependencies": {
     "@eslint/js": "9.27.0",
+    "@faker-js/faker": "^10.1.0",
     "@types/express": "5.0.3",
     "@types/formidable": "^3.4.6",
     "@types/jsonwebtoken": "^9.0.10",
